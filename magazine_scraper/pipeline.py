@@ -2,6 +2,7 @@ from pathlib import Path
 
 from magazine_scraper.epub_builder import build_epub
 from magazine_scraper.scraper import scrape_article, scrape_toc
+from magazine_scraper.writer import write_epub
 
 
 def run_pipeline(toc_url: str, output_path: Path) -> Path:
@@ -14,7 +15,10 @@ def run_pipeline(toc_url: str, output_path: Path) -> Path:
         scrape_article(a)
 
     # Step 3: Build EPUB
-    return build_epub(toc, output_path)
+    epub_bytes = build_epub(toc)
+
+    # Step 4: Write to disk
+    return write_epub(epub_bytes, output_path)
 
 
 def main() -> None:
