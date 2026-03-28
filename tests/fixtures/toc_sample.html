@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head><title>September 2099 Issue - Example Magazine</title></head>
+<body>
+  <!-- Nav links (should be excluded) -->
+  <a href="/magazine/">Current Issue</a>
+  <a href="/magazine/backissues/">Back Issues</a>
+  <a href="/magazine/toc/2099/08/">August 2099</a>
+  <a href="/games/">Games</a>
+  <a href="https://www.example.com/games/crossword/archive/">Daily Crossword</a>
+
+  <h1 class="ArchiveSubNav_title__S2DAt">September 2099</h1>
+
+  <!-- First article: image link (no text → skipped) + title link (kept) + duplicate -->
+  <a href="https://www.example.com/magazine/2099/09/the-rise-of-quantum-gardening/111111/"
+     data-event-element="image">
+    <img alt="illustration" />
+  </a>
+  <a href="https://www.example.com/magazine/2099/09/the-rise-of-quantum-gardening/111111/"
+     class="hedLink" data-event-element="title">
+    The Rise of Quantum Gardening
+  </a>
+  <a href="https://www.example.com/magazine/2099/09/the-rise-of-quantum-gardening/111111/"
+     data-event-element="other">
+    The Rise of Quantum Gardening
+  </a>
+
+  <!-- Second article -->
+  <a href="https://www.example.com/magazine/2099/09/a-brief-history-of-invisible-bridges/222222/"
+     data-event-element="title">
+    A Brief History of Invisible Bridges
+  </a>
+
+  <!-- Third article (relative URL — tests normalization) -->
+  <a href="/magazine/2099/09/the-last-library-on-mars/333333/"
+     data-event-element="title">
+    The Last Library on Mars
+  </a>
+</body>
+</html>
