@@ -22,6 +22,6 @@ uv run playwright install chromium
 ## Code Conventions
 
 - Use **dataclasses** for data models (see `models.py`).
-- Use **async functions** for all scraping operations.
+- **No async APIs.** Use synchronous functions throughout; do not use `async`/`await` or `asyncio`.
 - Use **type hints** on all function signatures.
 - Pre-commit hooks handle linting, formatting, and type checking automatically.

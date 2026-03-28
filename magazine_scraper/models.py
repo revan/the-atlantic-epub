@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 class Article:
     title: str
     url: str
-    content: str  # HTML content of the article body
+    content: str | None = None  # HTML content of the article body
 
 
 @dataclass
