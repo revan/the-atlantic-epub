@@ -207,6 +207,16 @@ def test_scrape_article_preserves_emphasis(scraped_article: Article) -> None:
     assert "The Martian Agricultural" in scraped_article.content
 
 
+def test_scrape_article_extracts_subtitle(scraped_article: Article) -> None:
+    """Subtitle should be extracted from the article header."""
+    assert scraped_article.subtitle == "Can photon-powered compost save the solar system?"
+
+
+def test_scrape_article_extracts_author(scraped_article: Article) -> None:
+    """Author should be extracted from the article header."""
+    assert scraped_article.author == "Zara Nova"
+
+
 @pytest.fixture()
 def multi_hr_html() -> str:
     return (FIXTURES_DIR / "article_multi_hr.html").read_text()
@@ -267,3 +277,11 @@ def test_scrape_article_multi_hr_skips_boilerplate(
     assert "One Story to Read Today" not in scraped_multi_hr_article.content
     assert "print edition" not in scraped_multi_hr_article.content
     assert "Sections Test" not in scraped_multi_hr_article.content
+
+
+def test_scrape_article_multi_hr_extracts_subtitle_and_author(
+    scraped_multi_hr_article: Article,
+) -> None:
+    """Subtitle and author should be extracted from the multi-<hr> fixture."""
+    assert scraped_multi_hr_article.subtitle == "An article with mid-body horizontal rules."
+    assert scraped_multi_hr_article.author == "Test Writer"

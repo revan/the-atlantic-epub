@@ -78,3 +78,47 @@ def test_build_epub_no_articles():
     data = build_epub(toc)
     with zipfile.ZipFile(io.BytesIO(data)) as zf:
         assert zf.read("mimetype") == b"application/epub+zip"
+
+
+def test_build_epub_includes_subtitle_and_author():
+    """Chapter XHTML should include subtitle as <h2> and author in <em>."""
+    toc = TableOfContents(
+        title="Subtitle Author Test",
+        articles=[
+            Article(
+                title="Featured",
+                url="http://ex.com/1",
+                content="<p>Body text</p>",
+                subtitle="A test subtitle",
+                author="Test Author",
+            ),
+        ],
+    )
+    data = build_epub(toc)
+
+    with zipfile.ZipFile(io.BytesIO(data)) as zf:
+        names = zf.namelist()
+        ch0 = zf.read([n for n in names if "article_0" in n][0]).decode()
+        assert "<h2>A test subtitle</h2>" in ch0
+        assert "<em>Test Author</em>" in ch0
+
+
+def test_build_epub_omits_subtitle_and_author_when_none():
+    """When subtitle and author are None, no <h2> or byline should appear."""
+    toc = TableOfContents(
+        title="No Subtitle Author",
+        articles=[
+            Article(
+                title="Plain",
+                url="http://ex.com/1",
+                content="<p>Body only</p>",
+            ),
+        ],
+    )
+    data = build_epub(toc)
+
+    with zipfile.ZipFile(io.BytesIO(data)) as zf:
+        names = zf.namelist()
+        ch0 = zf.read([n for n in names if "article_0" in n][0]).decode()
+        assert "<h2>" not in ch0
+        assert "<em>" not in ch0

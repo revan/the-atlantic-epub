@@ -71,6 +71,16 @@ def scrape_article(article: Article, browser: BrowserContext) -> None:
 
     soup = BeautifulSoup(html, "lxml")
 
+    # Extract subtitle from the article header
+    desc_el = soup.select_one('div[data-flatplan-description="true"] p')
+    if desc_el:
+        article.subtitle = desc_el.get_text(strip=True)
+
+    # Extract author from the article header
+    author_el = soup.select_one('a[data-flatplan-author-link="true"]')
+    if author_el:
+        article.author = author_el.get_text(strip=True)
+
     body = soup.select_one('section[data-flatplan-body="true"]')
     if body is None:
         article.content = ""

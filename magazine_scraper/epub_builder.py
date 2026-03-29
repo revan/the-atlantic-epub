@@ -21,7 +21,9 @@ def build_epub(toc: TableOfContents, cover_image: bytes | None = None) -> bytes:
     chapters: list[epub.EpubHtml] = []
     for i, article in enumerate(toc.articles):
         ch = epub.EpubHtml(title=article.title, file_name=f"article_{i}.xhtml", lang="en")
-        ch.content = f"<h1>{article.title}</h1>{article.content or ''}"
+        subtitle_html = f"<h2>{article.subtitle}</h2>" if article.subtitle else ""
+        author_html = f"<p><em>{article.author}</em></p>" if article.author else ""
+        ch.content = f"<h1>{article.title}</h1>{subtitle_html}{author_html}{article.content or ''}"
         book.add_item(ch)
         chapters.append(ch)
 

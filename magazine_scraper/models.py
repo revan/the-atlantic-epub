@@ -6,6 +6,8 @@ class Article:
     title: str
     url: str
     content: str | None = None  # HTML content of the article body
+    subtitle: str | None = None
+    author: str | None = None
 
 
 @dataclass
