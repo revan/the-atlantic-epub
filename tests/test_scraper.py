@@ -162,3 +162,65 @@ def test_scrape_article_preserves_emphasis(scraped_article: Article) -> None:
     assert scraped_article.content is not None
     assert "<em>" in scraped_article.content
     assert "The Martian Agricultural" in scraped_article.content
+
+
+@pytest.fixture()
+def multi_hr_html() -> str:
+    return (FIXTURES_DIR / "article_multi_hr.html").read_text()
+
+
+@pytest.fixture()
+def mock_multi_hr_browser(multi_hr_html: str) -> Generator[MagicMock]:
+    """Build a mock BrowserContext whose pages serve the multi-<hr> fixture."""
+    from playwright.sync_api import sync_playwright
+
+    pw = sync_playwright().start()
+    real_browser = pw.chromium.launch()
+    page = real_browser.new_page()
+    page.set_content(multi_hr_html)
+
+    mock_page = MagicMock(wraps=page)
+    mock_page.goto = MagicMock()
+    mock_page.close = MagicMock()
+
+    mock_browser = MagicMock()
+    mock_browser.new_page.return_value = mock_page
+
+    yield mock_browser
+
+    real_browser.close()
+    pw.stop()
+
+
+@pytest.fixture()
+def scraped_multi_hr_article(mock_multi_hr_browser: MagicMock) -> Article:
+    """Run scrape_article on the multi-<hr> fixture."""
+    article = Article(
+        title="Multi-Section Article",
+        url="https://example.com/magazine/2099/09/multi-section/999999/",
+    )
+    scrape_article(article, mock_multi_hr_browser)
+    return article
+
+
+def test_scrape_article_with_multiple_hrs(scraped_multi_hr_article: Article) -> None:
+    """Content after mid-article <hr> dividers must be preserved."""
+    assert scraped_multi_hr_article.content is not None
+    # First section paragraph
+    assert "ambassador to Italy" in scraped_multi_hr_article.content
+    # Second section paragraph (was previously truncated)
+    assert (
+        "But here she was in a Senate hearing room in October" in scraped_multi_hr_article.content
+    )
+    # Third paragraph
+    assert "captures all sections of long-form articles" in scraped_multi_hr_article.content
+
+
+def test_scrape_article_multi_hr_skips_boilerplate(
+    scraped_multi_hr_article: Article,
+) -> None:
+    """Newsletter boilerplate and print-edition credit should still be excluded."""
+    assert scraped_multi_hr_article.content is not None
+    assert "One Story to Read Today" not in scraped_multi_hr_article.content
+    assert "print edition" not in scraped_multi_hr_article.content
+    assert "Sections Test" not in scraped_multi_hr_article.content

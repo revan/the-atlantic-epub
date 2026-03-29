@@ -78,8 +78,10 @@ def scrape_article(article: Article, browser: BrowserContext) -> None:
     for promo in body.select('div[data-flatplan-ignore="true"]'):
         promo.decompose()
 
-    # Remove everything from the <hr> separator onward (print-edition credit, etc.)
-    hr = body.select_one("hr")
+    # Remove everything from the last <hr> separator onward (print-edition credit,
+    # etc.).  Earlier <hr> elements are mid-article section dividers and must be kept.
+    hrs = body.select("hr")
+    hr = hrs[-1] if hrs else None
     if hr:
         for sibling in list(hr.find_next_siblings()):
             if isinstance(sibling, Tag):
