@@ -84,7 +84,7 @@ def test_scrape_toc_normalizes_relative_urls(mock_playwright: MagicMock) -> None
 
 def test_scrape_article_fills_content() -> None:
     article = Article(title="Test Article", url="https://example.com/test")
-    scrape_article(article)
+    scrape_article(article, MagicMock())
     assert article.content is not None
     assert article.content != ""
     assert "Test Article" in article.content

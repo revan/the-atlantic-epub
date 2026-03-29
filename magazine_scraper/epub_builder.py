@@ -12,6 +12,7 @@ def build_epub(toc: TableOfContents) -> bytes:
     book = epub.EpubBook()
     book.set_identifier(str(uuid.uuid4()))
     book.set_title(toc.title)
+    book.add_author("The Atlantic")
     book.set_language("en")
 
     chapters: list[epub.EpubHtml] = []

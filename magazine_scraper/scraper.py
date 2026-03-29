@@ -1,6 +1,6 @@
 from urllib.parse import urlparse
 
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import Browser, sync_playwright
 
 from magazine_scraper.models import Article, TableOfContents
 
@@ -53,7 +53,7 @@ def scrape_toc(url: str) -> TableOfContents:
     return TableOfContents(title=title, articles=articles)
 
 
-def scrape_article(article: Article) -> None:
+def scrape_article(article: Article, browser: Browser) -> None:
     """Scrape an individual article page to get its content."""
     # TODO: implement with playwright
     article.content = "<p>Placeholder content for {}</p>".format(article.title)
