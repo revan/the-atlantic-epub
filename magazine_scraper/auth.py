@@ -14,7 +14,7 @@ def login() -> BrowserContext:
     load_dotenv()
 
     pw = sync_playwright().start()
-    browser = pw.chromium.launch(headless=False)
+    browser = pw.chromium.launch()
 
     login_cookie = os.environ.get("LOGIN_COOKIE", "")
     if login_cookie:
