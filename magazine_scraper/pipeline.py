@@ -1,8 +1,11 @@
 import logging
 import re
 import time
+from io import BytesIO
 from pathlib import Path
 from urllib.request import Request, urlopen
+
+from PIL import Image
 
 from magazine_scraper.auth import login
 from magazine_scraper.epub_builder import build_epub
@@ -26,12 +29,20 @@ def title_to_filename(title: str) -> str:
     return f"{sanitized}.epub" if sanitized else "magazine.epub"
 
 
+def convert_to_baseline_jpeg(image_data: bytes) -> bytes:
+    """Convert any image to baseline (non-progressive) JPEG bytes."""
+    img = Image.open(BytesIO(image_data))
+    output = BytesIO()
+    img.save(output, format="JPEG", quality=85, progressive=False, optimize=False)
+    return output.getvalue()
+
+
 def download_cover_image(url: str) -> bytes:
-    """Download the cover image and return raw bytes."""
+    """Download the cover image and return it as baseline JPEG bytes."""
     request = Request(url, headers={"User-Agent": "Mozilla/5.0"})
     data: bytes = urlopen(request).read()  # noqa: S310
     time.sleep(1)  # rate-limit
-    return data
+    return convert_to_baseline_jpeg(data)
 
 
 def run_pipeline(toc_url: str, output_dir: Path) -> Path:
