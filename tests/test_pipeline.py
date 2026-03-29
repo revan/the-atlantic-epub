@@ -8,15 +8,18 @@ from magazine_scraper.pipeline import run_pipeline, url_to_filename
 
 def test_run_pipeline_produces_output(tmp_path: Path):
     mock_context = MagicMock()
+    mock_login = MagicMock()
+    mock_login.__enter__ = MagicMock(return_value=mock_context)
+    mock_login.__exit__ = MagicMock(return_value=False)
     with (
-        patch("magazine_scraper.pipeline.login", return_value=mock_context),
+        patch("magazine_scraper.pipeline.login", return_value=mock_login),
         patch("magazine_scraper.pipeline.time.sleep"),
     ):
         result = run_pipeline("https://example.com/issue-1", tmp_path)
         assert result.exists()
         assert result.parent == tmp_path
         assert result.suffix == ".epub"
-    mock_context.close.assert_called_once()
+    mock_login.__exit__.assert_called_once()
 
 
 @pytest.mark.parametrize(

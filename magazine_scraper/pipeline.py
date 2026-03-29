@@ -60,21 +60,17 @@ def run_pipeline(toc_url: str, output_dir: Path) -> Path:
         cover_image = download_cover_image(toc.cover_image_url)
         logger.info("Cover image downloaded (%d bytes)", len(cover_image))
 
-    # Step 3: Log in
+    # Step 3: Log in and scrape each article
     logger.info("Logging in to The Atlantic")
-    context = login()
-    logger.info("Login successful")
+    with login() as context:
+        logger.info("Login successful")
 
-    # Step 4: Scrape each article
-    total = len(toc.articles)
-    try:
+        # Step 4: Scrape each article
+        total = len(toc.articles)
         for i, a in enumerate(toc.articles, start=1):
             logger.info("Scraping article %d/%d: %s", i, total, a.title)
             scrape_article(a, context)
             time.sleep(1)
-    finally:
-        context.close()
-        logger.info("Browser context closed")
 
     logger.info("All articles scraped")
 
