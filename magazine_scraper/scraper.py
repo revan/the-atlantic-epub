@@ -15,7 +15,8 @@ def scrape_toc(url: str) -> TableOfContents:
 
         # Extract issue title from the <h1>
         h1 = page.query_selector("h1")
-        title = (h1.text_content() or "").strip() if h1 else "Unknown Issue"
+        raw_title = (h1.text_content() or "").strip() if h1 else "Unknown Issue"
+        title = f"The Atlantic {raw_title}" if raw_title != "Unknown Issue" else raw_title
 
         # Extract cover image URL (the image beside "In This Issue")
         cover_img = page.query_selector("img[class*='IssueDescription_cover']")

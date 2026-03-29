@@ -49,7 +49,7 @@ def test_scrape_toc_extracts_title_and_articles(mock_playwright: MagicMock) -> N
     with patch("magazine_scraper.scraper.sync_playwright", return_value=mock_playwright):
         toc = scrape_toc("https://www.example.com/magazine/toc/2099/09/")
 
-    assert toc.title == "September 2099"
+    assert toc.title == "The Atlantic September 2099"
     assert len(toc.articles) == 3
 
     assert toc.articles[0].title == "The Rise of Quantum Gardening"
