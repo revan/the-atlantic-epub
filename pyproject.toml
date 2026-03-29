@@ -8,6 +8,7 @@ dependencies = [
     "beautifulsoup4",
     "lxml",
     "python-dotenv",
+    "pillow>=12.1.1",
 ]
 
 [dependency-groups]
