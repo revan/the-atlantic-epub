@@ -71,6 +71,49 @@ def test_scrape_toc_deduplicates_links(mock_playwright: MagicMock) -> None:
     assert len(urls) == len(set(urls))
 
 
+def test_scrape_toc_extracts_cover_image_url(mock_playwright: MagicMock) -> None:
+    """The fixture has a cover <img> with class IssueDescription_cover__*."""
+    with patch("magazine_scraper.scraper.sync_playwright", return_value=mock_playwright):
+        toc = scrape_toc("https://www.example.com/magazine/toc/2099/09/")
+
+    assert toc.cover_image_url == "https://cdn.example.com/covers/2099-09-cover.jpg"
+
+
+def test_scrape_toc_cover_image_url_none_when_missing() -> None:
+    """When there is no cover image element, cover_image_url should be None."""
+    from playwright.sync_api import sync_playwright
+
+    html = """
+    <html><body>
+      <h1>No Cover Issue</h1>
+      <a href="/magazine/2099/09/article/111/">An Article</a>
+    </body></html>
+    """
+    pw = sync_playwright().start()
+    browser = pw.chromium.launch()
+    page = browser.new_page()
+    page.set_content(html)
+
+    mock_page = MagicMock(wraps=page)
+    mock_page.goto = MagicMock()
+
+    mock_pw = MagicMock()
+    mock_browser = MagicMock()
+    mock_browser.new_page.return_value = mock_page
+    mock_browser.close = browser.close
+    mock_pw.chromium.launch.return_value = mock_browser
+    mock_pw.__enter__ = MagicMock(return_value=mock_pw)
+    mock_pw.__exit__ = MagicMock(return_value=False)
+
+    try:
+        with patch("magazine_scraper.scraper.sync_playwright", return_value=mock_pw):
+            toc = scrape_toc("https://www.example.com/magazine/toc/2099/09/")
+        assert toc.cover_image_url is None
+    finally:
+        browser.close()
+        pw.stop()
+
+
 def test_scrape_toc_normalizes_relative_urls(mock_playwright: MagicMock) -> None:
     """Relative hrefs should be expanded to absolute URLs."""
     with patch("magazine_scraper.scraper.sync_playwright", return_value=mock_playwright):

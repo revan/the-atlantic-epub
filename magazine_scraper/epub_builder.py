@@ -7,13 +7,16 @@ from ebooklib import epub
 from magazine_scraper.models import TableOfContents
 
 
-def build_epub(toc: TableOfContents) -> bytes:
+def build_epub(toc: TableOfContents, cover_image: bytes | None = None) -> bytes:
     """Assemble scraped articles into an in-memory EPUB file."""
     book = epub.EpubBook()
     book.set_identifier(str(uuid.uuid4()))
     book.set_title(toc.title)
     book.add_author("The Atlantic")
     book.set_language("en")
+
+    if cover_image is not None:
+        book.set_cover("cover.jpg", cover_image)
 
     chapters: list[epub.EpubHtml] = []
     for i, article in enumerate(toc.articles):

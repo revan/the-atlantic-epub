@@ -1,6 +1,7 @@
 import logging
 import time
 from pathlib import Path
+from urllib.request import Request, urlopen
 
 from magazine_scraper.auth import login
 from magazine_scraper.epub_builder import build_epub
@@ -8,6 +9,14 @@ from magazine_scraper.scraper import scrape_article, scrape_toc
 from magazine_scraper.writer import write_epub
 
 logger = logging.getLogger(__name__)
+
+
+def download_cover_image(url: str) -> bytes:
+    """Download the cover image and return raw bytes."""
+    request = Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    data: bytes = urlopen(request).read()  # noqa: S310
+    time.sleep(1)  # rate-limit
+    return data
 
 
 def run_pipeline(toc_url: str, output_path: Path) -> Path:
@@ -20,12 +29,19 @@ def run_pipeline(toc_url: str, output_path: Path) -> Path:
     logger.info("Found %d articles in '%s'", len(toc.articles), toc.title)
     time.sleep(1)
 
-    # Step 2: Log in
+    # Step 2: Download cover image
+    cover_image: bytes | None = None
+    if toc.cover_image_url:
+        logger.info("Downloading cover image from %s", toc.cover_image_url)
+        cover_image = download_cover_image(toc.cover_image_url)
+        logger.info("Cover image downloaded (%d bytes)", len(cover_image))
+
+    # Step 3: Log in
     logger.info("Logging in to The Atlantic")
     context = login()
     logger.info("Login successful")
 
-    # Step 3: Scrape each article
+    # Step 4: Scrape each article
     total = len(toc.articles)
     try:
         for i, a in enumerate(toc.articles, start=1):
@@ -38,12 +54,12 @@ def run_pipeline(toc_url: str, output_path: Path) -> Path:
 
     logger.info("All articles scraped")
 
-    # Step 4: Build EPUB
+    # Step 5: Build EPUB
     logger.info("Building EPUB")
-    epub_bytes = build_epub(toc)
+    epub_bytes = build_epub(toc, cover_image=cover_image)
     logger.info("EPUB built (%d bytes)", len(epub_bytes))
 
-    # Step 5: Write to disk
+    # Step 6: Write to disk
     logger.info("Writing EPUB to %s", output_path)
     result = write_epub(epub_bytes, output_path)
     logger.info("Pipeline complete — EPUB written to %s", result)

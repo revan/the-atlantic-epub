@@ -12,3 +12,4 @@ class Article:
 class TableOfContents:
     title: str  # Magazine issue title
     articles: list[Article] = field(default_factory=list)
+    cover_image_url: str | None = None

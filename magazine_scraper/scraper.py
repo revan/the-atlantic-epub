@@ -17,6 +17,10 @@ def scrape_toc(url: str) -> TableOfContents:
         h1 = page.query_selector("h1")
         title = (h1.text_content() or "").strip() if h1 else "Unknown Issue"
 
+        # Extract cover image URL (the image beside "In This Issue")
+        cover_img = page.query_selector("img[class*='IssueDescription_cover']")
+        cover_image_url = cover_img.get_attribute("src") if cover_img else None
+
         # Extract article links: include /magazine/ paths, exclude /magazine/toc and /games/
         link_elements = page.query_selector_all('a[href*="/magazine/"]')
         seen: set[str] = set()
@@ -51,7 +55,7 @@ def scrape_toc(url: str) -> TableOfContents:
 
         browser.close()
 
-    return TableOfContents(title=title, articles=articles)
+    return TableOfContents(title=title, articles=articles, cover_image_url=cover_image_url)
 
 
 def scrape_article(article: Article, browser: BrowserContext) -> None:
