@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from magazine_scraper.pipeline import run_pipeline, title_to_filename
+from magazine_scraper.pipeline import run_pipeline, url_to_filename
 
 
 def test_run_pipeline_produces_output(tmp_path: Path):
@@ -20,16 +20,14 @@ def test_run_pipeline_produces_output(tmp_path: Path):
 
 
 @pytest.mark.parametrize(
-    ("title", "expected"),
+    ("toc_url", "expected"),
     [
-        ("September 2099", "September_2099.epub"),
-        ("The Atlantic — March 2024", "The_Atlantic_March_2024.epub"),
-        ("Hello  World", "Hello_World.epub"),
-        ("Special! Ch@rs & More", "Special_Ch_rs_More.epub"),
-        ("  Leading/Trailing Spaces  ", "Leading_Trailing_Spaces.epub"),
-        ("", "magazine.epub"),
-        ("!!!???", "magazine.epub"),
+        ("https://www.theatlantic.com/magazine/toc/2026/04/", "The Atlantic 2026-04.epub"),
+        ("https://www.theatlantic.com/magazine/toc/2024/03/", "The Atlantic 2024-03.epub"),
+        ("https://www.theatlantic.com/magazine/toc/2025/12/", "The Atlantic 2025-12.epub"),
+        ("https://www.theatlantic.com/magazine/toc/2025/12", "The Atlantic 2025-12.epub"),
+        ("https://example.com/no-date", "The Atlantic.epub"),
     ],
 )
-def test_title_to_filename(title: str, expected: str) -> None:
-    assert title_to_filename(title) == expected
+def test_url_to_filename(toc_url: str, expected: str) -> None:
+    assert url_to_filename(toc_url) == expected

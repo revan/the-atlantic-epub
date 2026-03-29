@@ -15,18 +15,16 @@ from magazine_scraper.writer import write_epub
 logger = logging.getLogger(__name__)
 
 
-def title_to_filename(title: str) -> str:
-    """Convert a title to an underscore-separated, filesystem-safe filename.
+def url_to_filename(toc_url: str) -> str:
+    """Extract year-month from a TOC URL and return a sortable filename.
 
-    Example: "The Atlantic — March 2024" -> "The_Atlantic_March_2024.epub"
+    Example: "https://www.theatlantic.com/magazine/toc/2026/04/" -> "The Atlantic 2026-04.epub"
     """
-    # Replace any non-alphanumeric characters (except spaces) with spaces,
-    # then collapse whitespace and convert spaces to underscores.
-    sanitized = re.sub(r"[^\w\s]", " ", title)
-    sanitized = re.sub(r"\s+", "_", sanitized.strip())
-    # Remove leading/trailing underscores that may result from stripping
-    sanitized = sanitized.strip("_")
-    return f"{sanitized}.epub" if sanitized else "magazine.epub"
+    match = re.search(r"/(\d{4})/(\d{2})/?", toc_url)
+    if not match:
+        return "The Atlantic.epub"
+    year, month = match.group(1), match.group(2)
+    return f"The Atlantic {year}-{month}.epub"
 
 
 def convert_to_baseline_jpeg(image_data: bytes) -> bytes:
@@ -85,8 +83,8 @@ def run_pipeline(toc_url: str, output_dir: Path) -> Path:
     epub_bytes = build_epub(toc, cover_image=cover_image)
     logger.info("EPUB built (%d bytes)", len(epub_bytes))
 
-    # Step 6: Write to disk — filename derived from the issue title
-    output_path = output_dir / title_to_filename(toc.title)
+    # Step 6: Write to disk — filename derived from the TOC URL date
+    output_path = output_dir / url_to_filename(toc_url)
     logger.info("Writing EPUB to %s", output_path)
     result = write_epub(epub_bytes, output_path)
     logger.info("Pipeline complete — EPUB written to %s", result)
