@@ -82,9 +82,83 @@ def test_scrape_toc_normalizes_relative_urls(mock_playwright: MagicMock) -> None
     assert "/magazine/2099/09/the-last-library-on-mars/333333/" in last.url
 
 
-def test_scrape_article_fills_content() -> None:
-    article = Article(title="Test Article", url="https://example.com/test")
-    scrape_article(article, MagicMock())
-    assert article.content is not None
-    assert article.content != ""
-    assert "Test Article" in article.content
+@pytest.fixture()
+def article_html() -> str:
+    return (FIXTURES_DIR / "article_sample.html").read_text()
+
+
+@pytest.fixture()
+def mock_article_browser(article_html: str) -> Generator[MagicMock]:
+    """Build a mock Browser whose pages serve the article fixture HTML."""
+    from playwright.sync_api import sync_playwright
+
+    pw = sync_playwright().start()
+    real_browser = pw.chromium.launch()
+    page = real_browser.new_page()
+    page.set_content(article_html)
+
+    # Wrap so goto is a no-op (content already loaded) and close is harmless
+    mock_page = MagicMock(wraps=page)
+    mock_page.goto = MagicMock()
+    mock_page.close = MagicMock()
+
+    mock_browser = MagicMock()
+    mock_browser.new_page.return_value = mock_page
+
+    yield mock_browser
+
+    real_browser.close()
+    pw.stop()
+
+
+@pytest.fixture()
+def scraped_article(mock_article_browser: MagicMock) -> Article:
+    """Run scrape_article with the fixture and return the populated Article."""
+    article = Article(
+        title="The Quantum Gardening Revolution",
+        url="https://example.com/magazine/2099/09/quantum-gardening/111111/",
+    )
+    scrape_article(article, mock_article_browser)
+    return article
+
+
+def test_scrape_article_extracts_body_paragraphs(scraped_article: Article) -> None:
+    """Content should include the real article paragraphs."""
+    assert scraped_article.content is not None
+    assert scraped_article.content != ""
+    assert "group of Martian settlers" in scraped_article.content
+    assert "quantum-entangled seeds" in scraped_article.content
+    assert "The debate would rage for decades to come." in scraped_article.content
+
+
+def test_scrape_article_strips_hyperlinks(scraped_article: Article) -> None:
+    """Hyperlink tags should be removed but their text content kept."""
+    assert scraped_article.content is not None
+    # The link text is preserved
+    assert "Nova Terra University" in scraped_article.content
+    # The <a> tag and href are gone
+    assert "<a " not in scraped_article.content
+    assert "example.com/university" not in scraped_article.content
+
+
+def test_scrape_article_omits_images(scraped_article: Article) -> None:
+    """Inline image blocks should not appear in the output."""
+    assert scraped_article.content is not None
+    assert "quantum-garden.jpg" not in scraped_article.content
+    assert "quantum garden on Mars" not in scraped_article.content
+    assert "<img" not in scraped_article.content
+
+
+def test_scrape_article_skips_boilerplate(scraped_article: Article) -> None:
+    """Newsletter promo and print-edition credit should be excluded."""
+    assert scraped_article.content is not None
+    assert "Galactic Digest newsletter" not in scraped_article.content
+    assert "Seeds of Tomorrow" not in scraped_article.content
+    assert "print edition" not in scraped_article.content
+
+
+def test_scrape_article_preserves_emphasis(scraped_article: Article) -> None:
+    """<em> tags for italics should remain in the output HTML."""
+    assert scraped_article.content is not None
+    assert "<em>" in scraped_article.content
+    assert "The Martian Agricultural" in scraped_article.content

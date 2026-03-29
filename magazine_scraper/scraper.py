@@ -1,5 +1,6 @@
 from urllib.parse import urlparse
 
+from bs4 import BeautifulSoup, Tag
 from playwright.sync_api import Browser, sync_playwright
 
 from magazine_scraper.models import Article, TableOfContents
@@ -55,5 +56,46 @@ def scrape_toc(url: str) -> TableOfContents:
 
 def scrape_article(article: Article, browser: Browser) -> None:
     """Scrape an individual article page to get its content."""
-    # TODO: implement with playwright
-    article.content = "<p>Placeholder content for {}</p>".format(article.title)
+    page = browser.new_page()
+    try:
+        page.goto(article.url, wait_until="networkidle")
+
+        html = page.content()
+    finally:
+        page.close()
+
+    soup = BeautifulSoup(html, "lxml")
+
+    body = soup.select_one('section[data-flatplan-body="true"]')
+    if body is None:
+        article.content = ""
+        return
+
+    # Remove elements before we iterate: images, promo modules, and the <hr>
+    # separator plus everything after it.
+    for img_div in body.select('div[data-flatplan-inline_image="true"]'):
+        img_div.decompose()
+    for promo in body.select('div[data-flatplan-ignore="true"]'):
+        promo.decompose()
+
+    # Remove everything from the <hr> separator onward (print-edition credit, etc.)
+    hr = body.select_one("hr")
+    if hr:
+        for sibling in list(hr.find_next_siblings()):
+            if isinstance(sibling, Tag):
+                sibling.decompose()
+        hr.decompose()
+
+    # Collect content paragraphs, skipping boilerplate (paragraphs with <small>)
+    paragraphs: list[Tag] = []
+    for p in body.select('p[data-flatplan-paragraph="true"]'):
+        if p.find("small"):
+            continue
+        paragraphs.append(p)
+
+    # Strip hyperlinks: unwrap <a> tags so their text remains inline
+    for p in paragraphs:
+        for a_tag in p.select("a"):
+            a_tag.unwrap()
+
+    article.content = "\n".join(str(p) for p in paragraphs)
