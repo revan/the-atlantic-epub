@@ -1,4 +1,5 @@
 import logging
+import re
 import time
 from pathlib import Path
 from urllib.request import Request, urlopen
@@ -11,6 +12,20 @@ from magazine_scraper.writer import write_epub
 logger = logging.getLogger(__name__)
 
 
+def title_to_filename(title: str) -> str:
+    """Convert a title to an underscore-separated, filesystem-safe filename.
+
+    Example: "The Atlantic — March 2024" -> "The_Atlantic_March_2024.epub"
+    """
+    # Replace any non-alphanumeric characters (except spaces) with spaces,
+    # then collapse whitespace and convert spaces to underscores.
+    sanitized = re.sub(r"[^\w\s]", " ", title)
+    sanitized = re.sub(r"\s+", "_", sanitized.strip())
+    # Remove leading/trailing underscores that may result from stripping
+    sanitized = sanitized.strip("_")
+    return f"{sanitized}.epub" if sanitized else "magazine.epub"
+
+
 def download_cover_image(url: str) -> bytes:
     """Download the cover image and return raw bytes."""
     request = Request(url, headers={"User-Agent": "Mozilla/5.0"})
@@ -19,7 +34,7 @@ def download_cover_image(url: str) -> bytes:
     return data
 
 
-def run_pipeline(toc_url: str, output_path: Path) -> Path:
+def run_pipeline(toc_url: str, output_dir: Path) -> Path:
     """Run the full scraping pipeline."""
     logger.info("Starting pipeline for %s", toc_url)
 
@@ -59,7 +74,8 @@ def run_pipeline(toc_url: str, output_path: Path) -> Path:
     epub_bytes = build_epub(toc, cover_image=cover_image)
     logger.info("EPUB built (%d bytes)", len(epub_bytes))
 
-    # Step 6: Write to disk
+    # Step 6: Write to disk — filename derived from the issue title
+    output_path = output_dir / title_to_filename(toc.title)
     logger.info("Writing EPUB to %s", output_path)
     result = write_epub(epub_bytes, output_path)
     logger.info("Pipeline complete — EPUB written to %s", result)
@@ -75,7 +91,7 @@ def main() -> None:
     )
 
     toc_url = sys.argv[1] if len(sys.argv) > 1 else "https://example.com/magazine/issue-1"
-    output = run_pipeline(toc_url, Path("output/magazine.epub"))
+    output = run_pipeline(toc_url, Path("output"))
     logger.info("Done — EPUB written to %s", output)
 
 
