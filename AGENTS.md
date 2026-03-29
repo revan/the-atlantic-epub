@@ -24,4 +24,5 @@ uv run playwright install chromium
 - Use **dataclasses** for data models (see `models.py`).
 - **No async APIs.** Use synchronous functions throughout; do not use `async`/`await` or `asyncio`.
 - Use **type hints** on all function signatures.
+- **Rate limiting.** Add a one-second sleep (`time.sleep(1)`) after every network call to comply with rate limiting.
 - Pre-commit hooks handle linting, formatting, and type checking automatically.

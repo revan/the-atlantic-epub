@@ -10,10 +10,19 @@ def login() -> Browser:
     Returns a Browser instance with an authenticated session.
     """
     load_dotenv()
-    _email = os.environ["LOGIN_EMAIL"]
-    _password = os.environ["LOGIN_PASSWORD"]
+    email = os.environ["LOGIN_EMAIL"]
+    password = os.environ["LOGIN_PASSWORD"]
 
     pw = sync_playwright().start()
     browser = pw.chromium.launch()
-    # TODO: implement actual login flow using email and password
+    page = browser.new_page()
+
+    page.goto("https://accounts.theatlantic.com/login/", wait_until="networkidle")
+
+    page.fill('input[name="email"]', email)
+    page.fill('input[name="password"]', password)
+    page.click('button[type="submit"]')
+    page.wait_for_load_state("networkidle")
+
+    page.close()
     return browser

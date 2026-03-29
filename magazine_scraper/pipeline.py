@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 
 from magazine_scraper.auth import login
@@ -10,6 +11,7 @@ def run_pipeline(toc_url: str, output_path: Path) -> Path:
     """Run the full scraping pipeline."""
     # Step 1: Scrape table of contents
     toc = scrape_toc(toc_url)
+    time.sleep(1)
 
     # Step 2: Log in
     browser = login()
@@ -18,6 +20,7 @@ def run_pipeline(toc_url: str, output_path: Path) -> Path:
     try:
         for a in toc.articles:
             scrape_article(a, browser)
+            time.sleep(1)
     finally:
         browser.close()
 
