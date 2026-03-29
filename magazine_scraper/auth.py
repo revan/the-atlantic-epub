@@ -24,7 +24,8 @@ def login() -> BrowserContext:
                 {
                     "name": "atljwt",
                     "value": login_cookie,
-                    "url": "https://accounts.theatlantic.com/",
+                    "domain": ".theatlantic.com",
+                    "path": "/",
                 }
             ]
         )

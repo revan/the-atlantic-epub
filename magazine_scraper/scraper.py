@@ -58,7 +58,7 @@ def scrape_article(article: Article, browser: BrowserContext) -> None:
     """Scrape an individual article page to get its content."""
     page = browser.new_page()
     try:
-        page.goto(article.url, wait_until="networkidle")
+        page.goto(article.url, wait_until="domcontentloaded")
 
         html = page.content()
     finally:
