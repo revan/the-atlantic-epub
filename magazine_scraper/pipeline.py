@@ -22,7 +22,7 @@ def run_pipeline(toc_url: str, output_path: Path) -> Path:
 
     # Step 2: Log in
     logger.info("Logging in to The Atlantic")
-    browser = login()
+    context = login()
     logger.info("Login successful")
 
     # Step 3: Scrape each article
@@ -30,11 +30,11 @@ def run_pipeline(toc_url: str, output_path: Path) -> Path:
     try:
         for i, a in enumerate(toc.articles, start=1):
             logger.info("Scraping article %d/%d: %s", i, total, a.title)
-            scrape_article(a, browser)
+            scrape_article(a, context)
             time.sleep(1)
     finally:
-        browser.close()
-        logger.info("Browser closed")
+        context.close()
+        logger.info("Browser context closed")
 
     logger.info("All articles scraped")
 

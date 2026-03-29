@@ -89,7 +89,7 @@ def article_html() -> str:
 
 @pytest.fixture()
 def mock_article_browser(article_html: str) -> Generator[MagicMock]:
-    """Build a mock Browser whose pages serve the article fixture HTML."""
+    """Build a mock BrowserContext whose pages serve the article fixture HTML."""
     from playwright.sync_api import sync_playwright
 
     pw = sync_playwright().start()

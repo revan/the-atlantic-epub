@@ -1,7 +1,7 @@
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup, Tag
-from playwright.sync_api import Browser, sync_playwright
+from playwright.sync_api import BrowserContext, sync_playwright
 
 from magazine_scraper.models import Article, TableOfContents
 
@@ -54,7 +54,7 @@ def scrape_toc(url: str) -> TableOfContents:
     return TableOfContents(title=title, articles=articles)
 
 
-def scrape_article(article: Article, browser: Browser) -> None:
+def scrape_article(article: Article, browser: BrowserContext) -> None:
     """Scrape an individual article page to get its content."""
     page = browser.new_page()
     try:
