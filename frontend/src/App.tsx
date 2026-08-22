@@ -112,7 +112,7 @@ export default function App() {
         <p className="mt-1 text-muted-foreground">
           {files === null
             ? "Loading issues…"
-            : `${scrapedCount} of ${issues.length} issues scraped, back to November 1857.`}
+            : `${scrapedCount} ${scrapedCount === 1 ? "issue" : "issues"} scraped`}
         </p>
       </header>
 
@@ -133,12 +133,6 @@ export default function App() {
               )
             })}
       </div>
-
-      {files !== null && visibleCount >= issues.length && (
-        <p className="py-8 text-center text-sm text-muted-foreground">
-          November 1857 &mdash; the first issue.
-        </p>
-      )}
     </div>
   )
 }

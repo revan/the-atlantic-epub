@@ -51,7 +51,6 @@ export function IssueCard({ issue, file, job, error, onScrape }: IssueCardProps)
 
         {file ? (
           <div className="col-start-1 row-start-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-            <Badge variant="secondary">Scraped</Badge>
             <span className="font-mono text-xs">{file.name}</span>
             <span>{SCRAPED_ON.format(new Date(file.modified))}</span>
             <span>{formatSize(file.size_bytes)}</span>
