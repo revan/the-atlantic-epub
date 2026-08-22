@@ -2,7 +2,7 @@
 
 ## Overview
 
-Magazine Scraper is a pipeline that scrapes a magazine website and assembles the content into an EPUB file. It navigates the magazine's table of contents, extracts each article's content, and packages everything into a portable ebook format.
+Magazine Scraper scrapes a magazine website and assembles the content into an EPUB file. It navigates the magazine's table of contents, extracts each article's content, and packages everything into a portable ebook format. The pipeline runs either from the CLI or behind a FastAPI server that queues scrapes and serves the resulting files.
 
 ## Pipeline Phases
 
@@ -15,9 +15,13 @@ Magazine Scraper is a pipeline that scrapes a magazine website and assembles the
 | Module | Purpose |
 |---|---|
 | `magazine_scraper/models.py` | Data models (`Article`, `TableOfContents`) as dataclasses |
-| `magazine_scraper/scraper.py` | Async scraping functions using Playwright |
+| `magazine_scraper/scraper.py` | Synchronous scraping functions using Playwright |
 | `magazine_scraper/epub_builder.py` | EPUB file assembly using ebooklib |
 | `magazine_scraper/pipeline.py` | Main orchestrator that chains the pipeline phases |
+| `magazine_scraper/auth.py` | Browser context for scraping (no login — see the README) |
+| `magazine_scraper/jobs.py` | Background scrape queue, one worker at a time |
+| `magazine_scraper/server.py` | FastAPI app: list files, download a file, scrape a month |
+| `magazine_scraper/backfill.py` | Walks the issue sitemap and runs the pipeline for each |
 
 ## Tech Stack
 
@@ -25,11 +29,20 @@ Magazine Scraper is a pipeline that scrapes a magazine website and assembles the
 - **Playwright** — Browser automation for scraping
 - **ebooklib** — EPUB file generation
 - **BeautifulSoup4 + lxml** — HTML parsing and content extraction
+- **FastAPI + Uvicorn** — HTTP service
 - **pytest** — Testing
 - **ruff** — Linting and formatting
 - **ty** — Type checking
 
 ## Running
+
+As a server (see the README for the endpoints):
+
+```bash
+docker compose up -d --build
+```
+
+As a one-off from the CLI:
 
 ```bash
 uv run python -m magazine_scraper.pipeline <toc-url>

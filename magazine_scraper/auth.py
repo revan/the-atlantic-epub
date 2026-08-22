@@ -1,69 +1,37 @@
-import os
+"""Browser context used for scraping.
+
+There is deliberately no login here.  Two facts make one unnecessary and
+one impossible:
+
+* The Atlantic's paywall is a *client-side* metered overlay — full article
+  HTML is server-rendered on every request, and ``scrape_article`` reads the
+  raw DOM with BeautifulSoup, so the overlay never applies.  An anonymous
+  context returns complete articles.
+* The sign-in form is protected by reCAPTCHA, which rejects the submission
+  with ``invalid_recaptcha`` under headless *and* headed Playwright.  A
+  credential flow cannot be made to work from automation.
+"""
+
 from collections.abc import Generator
 from contextlib import contextmanager
 
-from dotenv import load_dotenv
-from playwright.sync_api import BrowserContext, Error, sync_playwright
+from playwright.sync_api import BrowserContext, sync_playwright
 
 
 @contextmanager
-def login() -> Generator[BrowserContext, None, None]:
-    """Launch a browser and yield an authenticated BrowserContext.
+def browser_context() -> Generator[BrowserContext, None, None]:
+    """Launch a browser and yield a context for scraping.
 
-    When the ``LOGIN_COOKIE`` env-var is set the interactive login is
-    skipped and the cookie is injected directly.  Otherwise the full
-    email/password flow is executed.
+    Use as a context manager so the browser and Playwright subprocess are
+    always cleaned up::
 
-    Use as a context manager so the browser and Playwright subprocess
-    are always cleaned up::
-
-        with login() as ctx:
+        with browser_context() as ctx:
             ...
     """
-    load_dotenv()
-
     pw = sync_playwright().start()
     browser = pw.chromium.launch()
-
     try:
-        login_cookie = os.environ.get("LOGIN_COOKIE", "")
-        if login_cookie:
-            context = browser.new_context()
-            context.add_cookies(
-                [
-                    {
-                        "name": "atljwt",
-                        "value": login_cookie,
-                        "domain": ".theatlantic.com",
-                        "path": "/",
-                    }
-                ]
-            )
-            yield context
-            return
-
-        email = os.environ["LOGIN_EMAIL"]
-        password = os.environ["LOGIN_PASSWORD"]
-
-        context = browser.new_context()
-        page = context.new_page()
-
-        page.goto("https://accounts.theatlantic.com/login/", wait_until="networkidle")
-
-        page.fill('input[name="username"]', email)
-        page.click('button[type="submit"]')
-        try:
-            page.frame_locator('title="reCAPTCHA"').locator(
-                'span[class="recaptcha-checkbox"]'
-            ).click(timeout=8_000)
-        except Error:
-            pass
-        page.fill('input[name="password"]', password)
-        page.click('button[type="submit"]')
-        page.wait_for_load_state("domcontentloaded")
-
-        page.close()
-        yield context
+        yield browser.new_context()
     finally:
         browser.close()
         pw.stop()

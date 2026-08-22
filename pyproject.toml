@@ -7,8 +7,9 @@ dependencies = [
     "ebooklib",
     "beautifulsoup4",
     "lxml",
-    "python-dotenv",
     "pillow>=12.1.1",
+    "fastapi>=0.141.1",
+    "uvicorn[standard]>=0.52.4",
 ]
 
 [dependency-groups]
@@ -18,6 +19,7 @@ dev = [
     "ruff",
     "ty",
     "pre-commit",
+    "httpx>=0.28.1",
 ]
 
 [tool.ruff]

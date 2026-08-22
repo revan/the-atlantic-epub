@@ -285,3 +285,16 @@ def test_scrape_article_multi_hr_extracts_subtitle_and_author(
     """Subtitle and author should be extracted from the multi-<hr> fixture."""
     assert scraped_multi_hr_article.subtitle == "An article with mid-body horizontal rules."
     assert scraped_multi_hr_article.author == "Test Writer"
+
+
+def test_scrape_toc_waits_for_domcontentloaded(mock_playwright: MagicMock) -> None:
+    """theatlantic.com never reaches network idle, so networkidle must not come back.
+
+    Ads and analytics poll continuously; waiting for networkidle made every
+    TOC scrape time out after 30 seconds.
+    """
+    with patch("magazine_scraper.scraper.sync_playwright", return_value=mock_playwright):
+        scrape_toc("https://www.example.com/magazine/toc/2099/09/")
+
+    mock_page = mock_playwright.chromium.launch.return_value.new_page.return_value
+    assert mock_page.goto.call_args.kwargs["wait_until"] == "domcontentloaded"

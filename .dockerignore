@@ -1,0 +1,15 @@
+.git
+.github
+.venv
+venv
+output
+data
+.env
+.idea
+__pycache__
+*.pyc
+.ruff_cache
+.pytest_cache
+.pre-commit-config.yaml
+tests
+*.md

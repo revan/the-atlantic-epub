@@ -11,7 +11,7 @@ def scrape_toc(url: str) -> TableOfContents:
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page()
-        page.goto(url, wait_until="networkidle")
+        page.goto(url, wait_until="domcontentloaded")
 
         # Extract issue title from the <h1>
         h1 = page.query_selector("h1")
