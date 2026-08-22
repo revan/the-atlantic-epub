@@ -2,7 +2,7 @@
 
 ## Overview
 
-Magazine Scraper scrapes a magazine website and assembles the content into an EPUB file. It navigates the magazine's table of contents, extracts each article's content, and packages everything into a portable ebook format. The pipeline runs either from the CLI or behind a FastAPI server that queues scrapes and serves the resulting files.
+Magazine Scraper scrapes a magazine website and assembles the content into an EPUB file. It navigates the magazine's table of contents, extracts each article's content, and packages everything into a portable ebook format. The pipeline runs either from the CLI or behind a FastAPI server that queues scrapes and serves the resulting files, with a React frontend served from the same origin.
 
 ## Pipeline Phases
 
@@ -22,6 +22,7 @@ Magazine Scraper scrapes a magazine website and assembles the content into an EP
 | `magazine_scraper/jobs.py` | Background scrape queue, one worker at a time |
 | `magazine_scraper/server.py` | FastAPI app: list files, download a file, scrape a month |
 | `magazine_scraper/backfill.py` | Walks the issue sitemap and runs the pipeline for each |
+| `frontend/` | React UI: a card per issue, scrape and download |
 
 ## Tech Stack
 
@@ -30,7 +31,8 @@ Magazine Scraper scrapes a magazine website and assembles the content into an EP
 - **ebooklib** — EPUB file generation
 - **BeautifulSoup4 + lxml** — HTML parsing and content extraction
 - **FastAPI + Uvicorn** — HTTP service
-- **pytest** — Testing
+- **React + Vite + Tailwind + shadcn/ui** — Frontend, built into the image and mounted at `/`
+- **pytest** and **Vitest** — Testing
 - **ruff** — Linting and formatting
 - **ty** — Type checking
 

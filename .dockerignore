@@ -13,3 +13,5 @@ __pycache__
 .pre-commit-config.yaml
 tests
 *.md
+frontend/node_modules
+frontend/dist

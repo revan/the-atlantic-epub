@@ -3,8 +3,8 @@
 Scrapes full issues of The Atlantic magazine into EPUB files, with cover art, a table of
 contents, and article subtitles and bylines — but no images within the articles.
 
-Runs as a small HTTP service in Docker: ask it to scrape a month, then list and download
-the EPUBs it has built.
+Runs as a small HTTP service in Docker with a web UI: browse every issue back to November
+1857, scrape the ones you want, and download the EPUBs it has built.
 
 Bring your own subscription; good journalism is worth paying for!
 
@@ -14,8 +14,22 @@ Bring your own subscription; good journalism is worth paying for!
 docker compose up -d --build
 ```
 
-The API listens on `http://localhost:8000`; interactive docs are at `/docs`. EPUBs are
-written to the `atlantic-data` volume at `/data/output` and survive restarts.
+Open `http://localhost:8000` for the UI. The API is on the same port, with interactive docs
+at `/docs`. EPUBs are written to the `atlantic-data` volume at `/data/output` and survive
+restarts.
+
+## The UI
+
+A card per issue, newest first: the list opens on next month's issue — the magazine publishes
+ahead of the calendar — and scrolls back to the first issue in November 1857. An issue that has
+not been scraped gets a **Scrape** button; one that has shows its filename, when it was scraped,
+its size, and a **Download** link.
+
+Cards read their state from `/files`, so a scraped issue stays scraped across restarts. Progress
+on a running scrape comes from `/jobs`, which is in-memory and resets with the server.
+
+Not every month has an issue — the magazine combines months in recent years, and its early
+decades varied — so some cards will fail to scrape. The card keeps the error.
 
 ## Endpoints
 
@@ -64,3 +78,18 @@ browser is headless or headed.
 
 See [CLAUDE.md](CLAUDE.md) for the local `uv` workflow and [ARCHITECTURE.md](ARCHITECTURE.md)
 for the module layout.
+
+The frontend lives in `frontend/` (React + Vite + shadcn/ui). For local work, run the API and the
+Vite dev server side by side — Vite proxies the API routes to port 8000, so there is no CORS
+setup:
+
+```bash
+uv run uvicorn magazine_scraper.server:app --reload
+```
+
+```bash
+cd frontend && npm install && npm run dev
+```
+
+`docker compose build` compiles the bundle in a Node stage and the server mounts it at `/`; a
+checkout without a build simply has no UI, and the API is unaffected.

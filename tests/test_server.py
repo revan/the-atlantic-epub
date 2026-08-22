@@ -121,3 +121,49 @@ def test_scrape_rejects_duplicate_issue(client, monkeypatch):
 
 def test_unknown_job(client):
     assert client.get("/jobs/deadbeef").status_code == 404
+
+
+@pytest.fixture
+def frontend_client(tmp_path: Path, monkeypatch):
+    """A client with a built frontend mounted at "/".
+
+    The mount is evaluated at import time, so the module has to be reloaded
+    once the environment points at a bundle.
+    """
+    import importlib
+
+    output = tmp_path / "output"
+    output.mkdir()
+    static = tmp_path / "static"
+    static.mkdir()
+    (static / "index.html").write_text("<!doctype html><title>The Atlantic</title>")
+
+    monkeypatch.setenv("OUTPUT_DIR", str(output))
+    monkeypatch.setenv("FRONTEND_DIR", str(static))
+    reloaded = importlib.reload(server)
+    jobs._jobs.clear()
+    try:
+        with TestClient(reloaded.app) as c:
+            yield c
+    finally:
+        jobs._jobs.clear()
+        monkeypatch.undo()
+        importlib.reload(server)
+
+
+def test_frontend_served_at_root(frontend_client):
+    response = frontend_client.get("/")
+
+    assert response.status_code == 200
+    assert "The Atlantic" in response.text
+
+
+def test_api_routes_win_over_the_frontend_mount(frontend_client):
+    """The catch-all mount must not shadow the API."""
+    assert frontend_client.get("/health").json() == {"status": "ok"}
+    assert frontend_client.get("/files").json() == []
+
+
+def test_frontend_not_mounted_without_a_bundle(client):
+    """Without a build, "/" is a plain 404 rather than a broken mount."""
+    assert client.get("/").status_code == 404

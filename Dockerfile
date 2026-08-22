@@ -1,3 +1,15 @@
+# Build the frontend first; only its dist/ makes it into the runtime image.
+FROM node:22-alpine AS frontend
+
+WORKDIR /build
+
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+
+COPY frontend ./
+RUN npm run build
+
+
 # The official mcr.microsoft.com/playwright/python images ship Python 3.12,
 # which is below this project's requires-python, so build from python:3.14.
 FROM python:3.14-slim
@@ -5,7 +17,8 @@ FROM python:3.14-slim
 ENV PYTHONUNBUFFERED=1 \
     UV_LINK_MODE=copy \
     UV_PROJECT_ENVIRONMENT=/usr/local \
-    OUTPUT_DIR=/data/output
+    OUTPUT_DIR=/data/output \
+    FRONTEND_DIR=/app/static
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
@@ -23,6 +36,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 RUN playwright install --with-deps chromium
 
 COPY magazine_scraper ./magazine_scraper
+COPY --from=frontend /build/dist ./static
 
 VOLUME ["/data"]
 EXPOSE 8000

@@ -1,7 +1,8 @@
 """FastAPI server exposing the scraper as a long-running service.
 
 Endpoints cover the three things the service is for: list the EPUBs on
-disk, download one, and scrape an issue for a given month.
+disk, download one, and scrape an issue for a given month. The built
+frontend, if one was compiled into the image, is served from ``/``.
 
 There is no API authentication: run this on a trusted network only.
 """
@@ -15,6 +16,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from magazine_scraper import jobs
@@ -22,12 +24,18 @@ from magazine_scraper import jobs
 logger = logging.getLogger(__name__)
 
 DEFAULT_OUTPUT_DIR = "/data/output"
+DEFAULT_FRONTEND_DIR = "/app/static"
 EPUB_MEDIA_TYPE = "application/epub+zip"
 
 
 def output_dir() -> Path:
     """Directory holding generated EPUBs."""
     return Path(os.environ.get("OUTPUT_DIR", DEFAULT_OUTPUT_DIR))
+
+
+def frontend_dir() -> Path:
+    """Directory holding the built frontend, if one was compiled in."""
+    return Path(os.environ.get("FRONTEND_DIR", DEFAULT_FRONTEND_DIR))
 
 
 class EpubFile(BaseModel):
@@ -162,3 +170,11 @@ def get_job(job_id: str) -> JobResponse:
     if job is None:
         raise HTTPException(status_code=404, detail=f"No such job: {job_id}")
     return _job_response(job)
+
+
+# Mounted last so every API route above keeps priority over the catch-all, and
+# only when a bundle exists — running uvicorn from a checkout has no build.
+_frontend = frontend_dir()
+if _frontend.is_dir():
+    logger.info("Serving frontend from %s", _frontend)
+    app.mount("/", StaticFiles(directory=_frontend, html=True), name="frontend")
